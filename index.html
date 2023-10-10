@@ -12,7 +12,10 @@
   <body>
     <header class="vw-100 bg-dark text-light text-center p-5 d-flex justify-content-around align-items-center">
       <h1>Weather Dashboard</h1>
-      <span>Los Angeles, CA 70°F <p>By elmfer</p></span>
+      <span>
+        <span id="header-location"></span> <span id="header-temperature"></span>
+        <p>By elmfer</p>
+      </span>
     </header>
 
     <div class="d-flex flex-column flex-md-row p-3 gap-3">
@@ -22,8 +25,14 @@
             Search City
           </div>
           <div class="card-body">
-            <input id="search-city" type="text" class="form-control mb-3" placeholder="City, State or Zipcode">
-            <button id="search-city-btn" class="btn btn-primary w-100">Search</button>
+            <div class="mb-3">
+              <input id="search-city" type="text" class="form-control" placeholder="City, State or Zipcode">
+              <div id="search-city-warn" class="form-text d-none">Warning</div>
+            </div>
+            <button id="search-city-btn" class="btn btn-primary w-100">
+              <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" hidden></span>
+              Search
+            </button>
           </div>
         </div>
 
@@ -41,17 +50,17 @@
 
       <main class="col-md-9 rounded flex-shrink-1 p-3 text-light text-shadow light-font sunset">
         <div style="font-size: 50px;" class="d-flex justify-content-between">
-          <span>Los Angeles, CA</span>
-          <span>70°F</span>
+          <span id="location"></span>
+          <span id="temperature"></span>
         </div>
 
         <div class="d-flex justify-content-between">
-          <span>Wind: 12mph N</span>
-          <span>Humidity: 44%</span>
+          <span>Wind: <span id="wind"></span></span>
+          <span>Humidity: <span id="humidity"></span></span>
         </div>
         <div style="height: 1in;"></div>
         <p style="font-size: 20px;">5 Day Forecast</p>
-        <div class="d-flex gap-3 overflow-auto p-3">
+        <div id="5-day-forecast" class="d-flex gap-3 overflow-auto p-3">
 
           <div class="card frosted-glass text-white box-shadow w-20 mr-3" style="min-width: 160px;">
             <div class="card-header bg-transparent">
@@ -63,51 +72,6 @@
               <p class="card-text">Humidity: 35%</p>
             </div>
           </div>
-
-          <div class="card frosted-glass text-white box-shadow w-20 mr-3" style="min-width: 160px;">
-            <div class="card-header bg-transparent">
-              Monday
-            </div>
-            <div class="card-body bg-transparent">
-              <h5 class="card-title">70°F</h5>
-              <p class="card-text">Wind: 17mphS</p>
-              <p class="card-text">Humidity: 35%</p>
-            </div>
-          </div>
-
-          <div class="card frosted-glass text-white box-shadow w-20 mr-3" style="min-width: 160px;">
-            <div class="card-header bg-transparent">
-              Monday
-            </div>
-            <div class="card-body bg-transparent">
-              <h5 class="card-title">70°F</h5>
-              <p class="card-text">Wind: 17mphS</p>
-              <p class="card-text">Humidity: 35%</p>
-            </div>
-          </div>
-
-          <div class="card frosted-glass text-white box-shadow w-20 mr-3" style="min-width: 160px;">
-            <div class="card-header bg-transparent">
-              Monday
-            </div>
-            <div class="card-body bg-transparent">
-              <h5 class="card-title">70°F</h5>
-              <p class="card-text">Wind: 17mphS</p>
-              <p class="card-text">Humidity: 35%</p>
-            </div>
-          </div>
-
-          <div class="card frosted-glass text-white box-shadow w-20 mr-3" style="min-width: 160px;">
-            <div class="card-header bg-transparent">
-              Monday
-            </div>
-            <div class="card-body bg-transparent">
-              <h5 class="card-title">70°F</h5>
-              <p class="card-text">Wind: 17mphS</p>
-              <p class="card-text">Humidity: 35%</p>
-            </div>
-          </div>
-
 
         </div>
       </main>
@@ -115,6 +79,7 @@
     
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dayjs/1.11.10/dayjs.min.js" integrity="sha512-FwNWaxyfy2XlEINoSnZh1JQ5TRRtGow0D6XcmAWmYCRgvqOUTnzCxPc9uF35u5ZEpirk1uhlPVA19tflhvnW1g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <script src="./assets/js/script.js" async defer></script>
   </body>
 </html>
