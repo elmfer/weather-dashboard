@@ -32,7 +32,7 @@ var citySearcher = {
       }
 
       citySearcher.removeWarning();
-      $('#search-city-btn').find('span').attr('hidden', false);
+      citySearcher.setIsLoading(true);
 
       citySearcher.fetchLocationByCityName(input)
       .then((newLocation) => {
@@ -44,7 +44,7 @@ var citySearcher = {
         citySearcher.warnUser(error);
       })
       .finally(() => {
-        $('#search-city-btn').find('span').attr('hidden', true);
+        citySearcher.setIsLoading(false);
       });
     });
   },
@@ -56,6 +56,10 @@ var citySearcher = {
   },
   getUserInput: function() {
     return $('#search-city').val();
+  },
+  setIsLoading: function(loading) {
+    $('#search-city-btn').attr('disabled', loading);
+    $('#search-city-btn').find('span').attr('hidden', !loading);
   },
   fetchLocationByCityName: function(name) {
     return fetch(`https://api.openweathermap.org/geo/1.0/direct?q=${name}&limit=1&appid=${OPEN_WEATHER_API_KEY}`)
