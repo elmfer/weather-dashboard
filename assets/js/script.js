@@ -133,6 +133,9 @@ var weatherManager = {
 
     dashboard.renderHumidity(weatherData.current.humidity);
 
+    const backgroundImage = `assets/images/${backgroundMap[weatherData.current.weather[0].icon]}`;
+    dashboard.renderBackgroundImage(backgroundImage);
+
     var forecast = [];
     for(var i = 0; i < 5; i++) {
       const dayForcast = weatherData.daily[i];
@@ -169,7 +172,10 @@ var dashboard = {
   renderHumidity: function(humidity) {
     $('#humidity').text(`${Math.round(humidity)}%`);
   },
-
+  renderBackgroundImage: function(background) {
+    $('main').css('background-image',
+    `linear-gradient(to bottom, rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0), rgba(0, 0, 0, 0)), url(\"${background}\")`);
+  },
   render5DayForecast: function(forecast) {
     var container = $('#5-day-forecast');
     container.children().remove();

@@ -23,30 +23,12 @@
 .frosted-glass {
   background: rgba(0, 0, 0, 0.2);
   backdrop-filter: blur(10px) saturate(50%);
+  -webkit-backdrop-filter: blur(10px) saturate(50%);
 }
 
-.sunset {
-  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0), rgba(0, 0, 0, 0)), var(--sunset);
-  background-size: cover;
-}
-
-.sunny {
-  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0), rgba(0, 0, 0, 0)), var(--sunny);
-  background-size: cover;
-}
-
-.cloudy {
-  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0), rgba(0, 0, 0, 0)), var(--cloudy);
-  background-size: cover;
-}
-
-.rainy {
-  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0), rgba(0, 0, 0, 0)), var(--rainy);
-  background-size: cover;
-}
-
-.night {
-  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0), rgba(0, 0, 0, 0)), var(--night);
+main {
+  background: grey;
+  background-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0), rgba(0, 0, 0, 0)), var(--sunset);
   background-size: cover;
 }
 
