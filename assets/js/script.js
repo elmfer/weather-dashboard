@@ -7,17 +7,15 @@ var geolocation = {
   state: "State"
 };
 
+var weather = {};
+
 var header = {
   renderLocation: function(location) {
     $('#header-location').text(`${location.city}, ${location.state}`);
   },
 
   renderTemperature: function(temperature, scale) {
-    if(scale === 'F') temperature = 1.8 * temperature - 459.67;
-
-    temperature = Math.floor(temperature);
-
-    $('#header-temperature').text(`${temperature}°${scale}`)
+    $('#header-temperature').text(weatherManager.temperatureToString(temperature, scale));
   }
 };
 
@@ -37,8 +35,17 @@ var citySearcher = {
       citySearcher.fetchLocationByCityName(input)
       .then((newLocation) => {
         geolocation = newLocation;
+
         header.renderLocation(geolocation);
         dashboard.renderLocation(geolocation);
+
+        weatherManager.fetchData(geolocation.latitude, geolocation.longitude)
+        .then((weatherResponse) => {
+          weather = weatherResponse;
+          console.log(weather);
+
+          weatherManager.renderData(weather);
+        });
       })
       .catch((error) => {
         citySearcher.warnUser(error);
@@ -86,26 +93,86 @@ var citySearcher = {
   }
 };
 
+var weatherManager = {
+  fetchData: function(latitude, longitude) {
+    const url =
+    `https://api.openweathermap.org/data/3.0/onecall?lat=${latitude}&lon=${longitude}&exclude=minutely,hourly,alerts&appid=${OPEN_WEATHER_API_KEY}`;
+
+    return fetch(url).then((response) => { return response.json() });
+  },
+  degreesToCompassRose: function(degrees) {
+    const directions = [
+      "N", "NE", "E", "SE", "S", "SW", "W", "NW"
+    ];
+
+    return directions[Math.round(degrees / 45) % 8];
+  },
+  temperatureToString: function(temperature, scale) {
+    scale = scale.toUpperCase();
+
+    if(scale === 'F') temperature = 1.8 * temperature - 459.67;
+
+    temperature = Math.round(temperature);
+
+    return `${temperature}°${scale}`;
+  },
+  windToString: function(windSpeed, unit, direction) {
+    if(unit === 'mph') windSpeed *= 2.237;
+
+    windSpeed = Math.round(windSpeed);
+
+    return `${windSpeed} ${unit}, ${direction}`;
+  },
+
+  renderData: function(weatherData) {
+    header.renderTemperature(weatherData.current.temp, 'F');
+    dashboard.renderTemperature(weatherData.current.temp, 'F');
+
+    const windDirection = this.degreesToCompassRose(weatherData.current.wind_deg);
+    dashboard.renderWind(weatherData.current.wind_speed, 'mph', windDirection);
+
+    dashboard.renderHumidity(weatherData.current.humidity);
+
+    var forecast = [];
+    for(var i = 0; i < 5; i++) {
+      const dayForcast = weatherData.daily[i];
+      var dayWeatherInfo = {};
+      dayWeatherInfo.temperature = this.temperatureToString(dayForcast.temp.day, 'F');
+      dayWeatherInfo.icon = iconMap[dayForcast.weather[0].icon];
+
+      const windDirection = this.degreesToCompassRose(dayForcast.wind_deg);
+      dayWeatherInfo.wind = "Wind: " + this.windToString(dayForcast.wind_speed, 'mph', windDirection);
+
+      dayWeatherInfo.humidity = `Humidity: ${dayForcast.humidity}%`;
+      dayWeatherInfo.precipitation = `Precipitaion: ${Math.round(dayForcast.pop * 100)}%`;
+
+      forecast.push(dayWeatherInfo);
+    }
+
+    dashboard.render5DayForecast(forecast);
+  }
+}
+
 var dashboard = {
   renderLocation: function(location) {
     $('#location').text(`${location.city}, ${location.state}`);
   },
 
   renderTemperature: function(temperature, scale) {
-    if(scale === 'F') temperature = 1.8 * temperature - 459.67;
-
-    temperature = Math.floor(temperature);
-
-    $('#temperature').text(`${temperature}°${scale}`);
+    $('#temperature').text(weatherManager.temperatureToString(temperature, scale));
   },
 
-  renderWeatherData: function(weather) {
-    $('#wind').text(weather.wind);
-    $('#humidity').text(weather.humidity);
+  renderWind: function(windSpeed, unit, direction) {
+    $('#wind').text(weatherManager.windToString(windSpeed, unit, direction));
+  },
+
+  renderHumidity: function(humidity) {
+    $('#humidity').text(`${Math.round(humidity)}%`);
   },
 
   render5DayForecast: function(forecast) {
     var container = $('#5-day-forecast');
+    container.children().remove();
 
     for(var i = 0; i < 5; i++) {
       var card = $('<div>');
@@ -119,9 +186,15 @@ var dashboard = {
 
       var cardBody = $('<div>');
       cardBody.addClass('card-body bg-transparent');
-      cardBody.append($('<h5>').text(forecast[i]));
-      cardBody.append($('<p>').text(forecast[i]));
-      cardBody.append($('<p>').text(forecast[i]));
+
+      var cardTitle = $('<div>').addClass('d-flex justify-content-between align-items-center')
+      cardTitle.append($('<h5>').text(forecast[i].temperature));
+      cardTitle.append($('<span>').addClass('wi ' + forecast[i].icon).css('font-size', '2rem'));
+      cardBody.append(cardTitle);
+
+      cardBody.append($('<div>').text(forecast[i].wind).css('margin', '3px'));
+      cardBody.append($('<div>').text(forecast[i].humidity).css('margin', '3px'));
+      cardBody.append($('<div>').text(forecast[i].precipitation).css('margin', '3px'));
       card.append(cardBody);
 
       container.append(card);
@@ -130,14 +203,6 @@ var dashboard = {
 };
 
 function init() {
-  header.renderLocation(geolocation);
-  header.renderTemperature(285, 'F');
-
-  dashboard.renderLocation(geolocation);
-  dashboard.renderTemperature(285, 'F');
-
-  dashboard.render5DayForecast({});
-
   citySearcher.init();
 }
 
