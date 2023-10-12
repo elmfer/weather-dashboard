@@ -108,7 +108,6 @@ var searchHistory = {
       event.preventDefault();
       const item = $(event.target);
       const query = searchHistory.getQuery(item.data('key'));
-      console.log(query.key);
 
       geolocation = query.geolocation;
       citySearcher.renderLocation(query.geolocation);
@@ -128,6 +127,8 @@ var citySearcher = {
     $('#search-city-btn').on('click', () => {
       citySearcher.search(citySearcher.getUserInput())
       .then(result => {
+        if(result === undefined) return;
+
         geolocation = result.geolocation;
         citySearcher.renderLocation(result.geolocation);
 
@@ -149,7 +150,7 @@ var citySearcher = {
 
     return citySearcher.fetchLocationByCityName(query)
     .then((newLocation) => {
-      return weatherManager.fetchData(geolocation.latitude, geolocation.longitude)
+      return weatherManager.fetchData(newLocation.latitude, newLocation.longitude)
       .then((weatherResponse) => {
         return { geolocation: newLocation, weather: weatherResponse, key: newLocation.key };
       });
