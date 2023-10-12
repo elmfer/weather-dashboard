@@ -1,4 +1,5 @@
 const OPEN_WEATHER_API_KEY = '08bab02cfe8ecd024eb7e69038dcec03';
+const SEARCH_HISTORY_MAX_SIZE = 15;
 
 var geolocation = {
   latitude: 0,
@@ -21,10 +22,42 @@ var header = {
 
 var searchHistory = {
   init: function() {
+    const queries = this.get();
 
+    this.renderData(queries);
+
+    if(queries.length < 1) return;
+
+    geolocation = queries[0].geolocation;
+    citySearcher.renderLocation(geolocation);
+    weather = queries[0].weather;
+    weatherManager.renderData(weather);
   },
   add: function(query) {
+    if(this.hasQuery(query)) {
+      this.remove(query);
+    }
 
+    var queries = this.get();
+    queries.unshift(query);
+
+    if(queries.length > SEARCH_HISTORY_MAX_SIZE) queries.pop();
+
+    this.save(queries);
+
+    this.renderData(this.get());
+  },
+  remove: function(query) {
+    var queries = this.get();
+
+    for(var i = 0; i < queries.length; i++) {
+      if(!citySearcher.isQueryEqual(query, queries[i])) continue;
+
+      queries.splice(i, 1);
+      break;
+    }
+
+    this.save(queries);
   },
   get: function() {
     const queries = localStorage.getItem('search-history');
@@ -32,13 +65,77 @@ var searchHistory = {
     if(queries === null) return [];
 
     return JSON.parse(queries);
+  },
+  clear: function() {
+    this.save([]);
+
+    this.renderData(this.get());
+  },
+  hasQuery: function(query) {
+    const queries = this.get();
+
+    for(var i = 0; i < queries.length; i++){
+      if(citySearcher.isQueryEqual(queries[i], query)) return true;
+    }
+
+    return false;
+  },
+  getQuery: function(key) {
+    const queries = this.get();
+    for(var i = 0; i < queries.length; i++){
+      if(key === queries[i].key) return queries[i];
+    }
+
+    return null;
+  },
+  renderData: function(history) {
+    var container = $('#search-history-list');
+    container.children().remove();
+
+    for(var i = 0; i < history.length; i++){
+      const item = this.generateQueryItem(history[i]);
+
+      container.append(item);
+    }
+  },
+  generateQueryItem: function(query) {
+    var item = $('<a>');
+    item.text(`${query.geolocation.city}, ${query.geolocation.state}`);
+    item.prop('href', "#");
+    item.data('key', query.key);
+    item.addClass('list-group-item');
+    item.on('click', function(event){
+      event.preventDefault();
+      const item = $(event.target);
+      const query = searchHistory.getQuery(item.data('key'));
+      console.log(query.key);
+
+      geolocation = query.geolocation;
+      citySearcher.renderLocation(query.geolocation);
+      weather = query.weather;
+      weatherManager.renderData(query.weather);
+    });
+
+    return item;
+  },
+  save: function(queries) {
+    localStorage.setItem('search-history', JSON.stringify(queries));
   }
 }
 
 var citySearcher = {
   init: function() {
     $('#search-city-btn').on('click', () => {
-      citySearcher.search(citySearcher.getUserInput());
+      citySearcher.search(citySearcher.getUserInput())
+      .then(result => {
+        geolocation = result.geolocation;
+        citySearcher.renderLocation(result.geolocation);
+
+        weather = result.weather;
+        weatherManager.renderData(result.weather);
+
+        searchHistory.add(result);
+      });
     });
   },
   search: function(query) {
@@ -50,18 +147,11 @@ var citySearcher = {
     citySearcher.removeWarning();
     citySearcher.setIsLoading(true);
 
-    citySearcher.fetchLocationByCityName(query)
+    return citySearcher.fetchLocationByCityName(query)
     .then((newLocation) => {
-      geolocation = newLocation;
-
-      header.renderLocation(geolocation);
-      dashboard.renderLocation(geolocation);
-
-      weatherManager.fetchData(geolocation.latitude, geolocation.longitude)
+      return weatherManager.fetchData(geolocation.latitude, geolocation.longitude)
       .then((weatherResponse) => {
-        weather = weatherResponse;
-
-        weatherManager.renderData(weather);
+        return { geolocation: newLocation, weather: weatherResponse, key: newLocation.key };
       });
     })
     .catch((error) => {
@@ -100,13 +190,21 @@ var citySearcher = {
           longitude: json[0].lon,
           city: json[0].name,
           state: json[0].state,
-          country: json[0].country
+          country: json[0].country,
+          key: `${json[0].name},${json[0].state},${json[0].country}`
         });
       });
     });
   },
   fetchLocationByZipCode: function(zipcode) {
 
+  },
+  renderLocation: function(location) {
+    header.renderLocation(location);
+    dashboard.renderLocation(location);
+  },
+  isQueryEqual: function(query1, query2) {
+    return query1.key === query2.key;
   }
 };
 
@@ -231,6 +329,7 @@ var dashboard = {
 };
 
 function init() {
+  searchHistory.init();
   citySearcher.init();
 }
 
