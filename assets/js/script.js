@@ -19,40 +19,56 @@ var header = {
   }
 };
 
+var searchHistory = {
+  init: function() {
+
+  },
+  add: function(query) {
+
+  },
+  get: function() {
+    const queries = localStorage.getItem('search-history');
+
+    if(queries === null) return [];
+
+    return JSON.parse(queries);
+  }
+}
+
 var citySearcher = {
   init: function() {
-    $('#search-city-btn').on('click', function() {
-      var input = citySearcher.getUserInput();
+    $('#search-city-btn').on('click', () => {
+      citySearcher.search(citySearcher.getUserInput());
+    });
+  },
+  search: function(query) {
+    if(query === '') {
+      citySearcher.warnUser("Input must not be blank.");
+      return;
+    }
 
-      if(input === '') {
-        citySearcher.warnUser("Input must not be blank.");
-        return;
-      }
+    citySearcher.removeWarning();
+    citySearcher.setIsLoading(true);
 
-      citySearcher.removeWarning();
-      citySearcher.setIsLoading(true);
+    citySearcher.fetchLocationByCityName(query)
+    .then((newLocation) => {
+      geolocation = newLocation;
 
-      citySearcher.fetchLocationByCityName(input)
-      .then((newLocation) => {
-        geolocation = newLocation;
+      header.renderLocation(geolocation);
+      dashboard.renderLocation(geolocation);
 
-        header.renderLocation(geolocation);
-        dashboard.renderLocation(geolocation);
+      weatherManager.fetchData(geolocation.latitude, geolocation.longitude)
+      .then((weatherResponse) => {
+        weather = weatherResponse;
 
-        weatherManager.fetchData(geolocation.latitude, geolocation.longitude)
-        .then((weatherResponse) => {
-          weather = weatherResponse;
-          console.log(weather);
-
-          weatherManager.renderData(weather);
-        });
-      })
-      .catch((error) => {
-        citySearcher.warnUser(error);
-      })
-      .finally(() => {
-        citySearcher.setIsLoading(false);
+        weatherManager.renderData(weather);
       });
+    })
+    .catch((error) => {
+      citySearcher.warnUser(error);
+    })
+    .finally(() => {
+      citySearcher.setIsLoading(false);
     });
   },
   warnUser: function(message) {
@@ -83,7 +99,8 @@ var citySearcher = {
           latitude: json[0].lat,
           longitude: json[0].lon,
           city: json[0].name,
-          state: json[0].state
+          state: json[0].state,
+          country: json[0].country
         });
       });
     });
@@ -181,30 +198,35 @@ var dashboard = {
     container.children().remove();
 
     for(var i = 0; i < 5; i++) {
-      var card = $('<div>');
-      card.addClass('card frosted-glass text-white box-shadow w-20 mr-3');
-      card.css('min-width', '160px');
-
-      var cardHeader = $('<div>');
-      cardHeader.addClass('card-header bg-transparent');
-      cardHeader.text(dayjs().add(i, 'day').format('dddd'));
-      card.append(cardHeader);
-
-      var cardBody = $('<div>');
-      cardBody.addClass('card-body bg-transparent');
-
-      var cardTitle = $('<div>').addClass('d-flex justify-content-between align-items-center')
-      cardTitle.append($('<h5>').text(forecast[i].temperature));
-      cardTitle.append($('<span>').addClass('wi ' + forecast[i].icon).css('font-size', '2rem'));
-      cardBody.append(cardTitle);
-
-      cardBody.append($('<div>').text(forecast[i].wind).css('margin', '3px'));
-      cardBody.append($('<div>').text(forecast[i].humidity).css('margin', '3px'));
-      cardBody.append($('<div>').text(forecast[i].precipitation).css('margin', '3px'));
-      card.append(cardBody);
+      const card = this.generateDayForcastCard(i, forecast[i]);
 
       container.append(card);
     }
+  },
+  generateDayForcastCard: function(daysInAdvance, forecast) {
+    var card = $('<div>');
+    card.addClass('card frosted-glass text-white box-shadow w-20 mr-3');
+    card.css('min-width', '160px');
+
+    var cardHeader = $('<div>');
+    cardHeader.addClass('card-header bg-transparent');
+    cardHeader.text(dayjs().add(daysInAdvance, 'day').format('dddd'));
+    card.append(cardHeader);
+
+    var cardBody = $('<div>');
+    cardBody.addClass('card-body bg-transparent');
+
+    var cardTitle = $('<div>').addClass('d-flex justify-content-between align-items-center')
+    cardTitle.append($('<h5>').text(forecast.temperature));
+    cardTitle.append($('<span>').addClass('wi ' + forecast.icon).css('font-size', '2rem'));
+    cardBody.append(cardTitle);
+
+    cardBody.append($('<div>').text(forecast.wind).css('margin', '3px'));
+    cardBody.append($('<div>').text(forecast.humidity).css('margin', '3px'));
+    cardBody.append($('<div>').text(forecast.precipitation).css('margin', '3px'));
+    card.append(cardBody);
+
+    return card;
   }
 };
 
