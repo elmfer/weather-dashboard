@@ -6,6 +6,12 @@ Get started by clicking on this link: [https://elmfer.github.io/weather-dashboar
 ### Screenshot
 ![Screenshot](./assets/images/screenshot.png)
 
+### Features
+* Search a city by it's name
+* Display picture closest looking to weather
+* 5 Day Forecast
+* Search History
+
 ### What I Learned
 * Javascript Promises
 * How To Third Party Server-Side APIs
